@@ -1,0 +1,14 @@
+[features]
+seeds = false
+[programs.localnet]
+solana_ipfs_gallery = "7w1ncm2Y5yrztktG36Jmz2PJvXMpRNjGc9WCr46nxJcQ"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "/Users/valentinmadrid/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
