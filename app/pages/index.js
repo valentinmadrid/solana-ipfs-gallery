@@ -1,13 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { create } from 'ipfs-http-client';
+import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
+import { Program, AnchorProvider, web3 } from '@project-serum/anchor';
+import idl from '../utils/solana_ipfs_gallery.json';
+
+const { SystemProgram, Keypair } = web3;
+
+let Photos = Keypair.generate();
+const programID = new PublicKey(idl.metadata.address);
+const network = clusterApiUrl('devnet');
+const opts = {
+  preflightCommitment: 'processed',
+};
 
 export default function Home() {
   const [fileUrl, setFileUrl] = useState('');
+  const [walletAddress, setWalletAddress] = useState(null);
   const client = create({
     host: 'ipfs.infura.io',
     port: 5001,
     protocol: 'https',
   });
+
+  useEffect(() => {
+    getProvider();
+  }, []);
+
+  const getProvider = () => {
+    const connection = new Connection(network, opts.preflightCommitment);
+    const provider = new AnchorProvider(
+      connection,
+      window.solana,
+      opts.preflightCommitment
+    );
+    return provider;
+  };
+
   const upload = async (e) => {
     const file = e.target.files[0];
     try {
@@ -18,6 +46,17 @@ export default function Home() {
       console.error('an error encountered', err);
     }
   };
+
+  const connectWallet = async () => {
+    const { solana } = window;
+
+    if (solana) {
+      const response = await solana.connect();
+      console.log('Connected with Public Key:', response.publicKey.toString());
+      setWalletAddress(response.publicKey.toString());
+    }
+  };
+
   return (
     <div>
       <div className='h-20 bg-black'>
@@ -41,11 +80,26 @@ export default function Home() {
             <div className='flex justify-center items-center h-full'>
               <img className='rounded-md w-32' src={fileUrl} width='600px' />
             </div>
-            <div className='flex justify-center items-center'>
-              <button className='text-white bg-blue-600 p-3 rounded-md mt-3 w-full'>
-                upload image
-              </button>
-            </div>
+            {walletAddress && (
+              <div className='flex justify-center items-center'>
+                <button
+                  className='text-white bg-blue-600 p-3 rounded-md mt-3 w-full'
+                  onClick={upload}
+                >
+                  Upload Image
+                </button>
+              </div>
+            )}
+            {!walletAddress && (
+              <div className='flex justify-center items-center'>
+                <button
+                  className='text-white bg-blue-600 p-3 rounded-md mt-3 w-full'
+                  onClick={connectWallet}
+                >
+                  Connect Wallet
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
